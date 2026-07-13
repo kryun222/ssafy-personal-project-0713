@@ -74,6 +74,15 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Quiz question/result transition */
+    @keyframes quizFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .quiz-fade-in {
+      animation: quizFadeIn 0.4s ease;
+    }
   </style>
 </head>
 <body class="bg-onyx text-slate-100 font-sans selection:bg-neon-mint selection:text-onyx overflow-x-hidden">
@@ -96,6 +105,7 @@
 
       <!-- Desktop Menu -->
       <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+        <a href="#quiz" class="hover:text-neon-mint transition-colors">성향진단</a>
         <a href="#about" class="hover:text-neon-mint transition-colors">소개</a>
         <a href="#features" class="hover:text-neon-mint transition-colors">핵심 기능</a>
         <a href="#app-preview" class="hover:text-neon-mint transition-colors">실제 앱 화면</a>
@@ -236,6 +246,34 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONBOARDING QUIZ SECTION (30초 투자 성향 진단) -->
+  <section id="quiz" class="py-24 relative border-t border-white/5 bg-gradient-to-b from-onyx to-dark-gray/40">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-neon-mint/5 blur-[140px] pointer-events-none"></div>
+
+    <div class="max-w-3xl mx-auto px-6 relative z-10">
+      <div class="text-center space-y-4 mb-12 reveal-el">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neon-mint/10 border border-neon-mint/20 text-neon-mint text-xs font-semibold uppercase tracking-wider">
+          <i data-lucide="compass" class="w-4 h-4"></i>
+          30초 투자 성향 진단
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          나에게 맞는 뉴그널 활용법 찾기
+        </h2>
+        <p class="text-slate-400">
+          몇 가지 질문에 답하면, 지금 나에게 가장 필요한 기능을 바로 보여드려요.
+        </p>
+      </div>
+
+      <div class="bg-dark-gray border border-white/10 rounded-[32px] p-6 sm:p-10 shadow-2xl reveal-el">
+        <!-- Progress dots -->
+        <div class="flex items-center justify-center gap-2 mb-8" id="quiz-progress"></div>
+
+        <!-- Dynamic quiz content (rendered by JS) -->
+        <div id="quiz-content" class="min-h-[300px] flex flex-col justify-center"></div>
       </div>
     </div>
   </section>
@@ -992,6 +1030,9 @@
       revealElements.forEach(el => {
         revealObserver.observe(el);
       });
+
+      // Initialize onboarding quiz first render
+      initQuiz();
     });
 
     // Feature 2 Interactive Tab Switcher
@@ -1012,6 +1053,301 @@
         listAi.classList.remove('hidden');
         listSemi.classList.add('hidden');
       }
+    }
+
+    // ==========================================
+    // ONBOARDING QUIZ (30초 투자 성향 진단)
+    // ==========================================
+
+    // Question flow: each option points to either the next question id, or a result id (prefixed r_)
+    const quizFlow = {
+      q1: {
+        question: "투자를 하고 계신가요?",
+        options: [
+          { label: "아니요, 아직 안 해요", next: "r_start_invest" },
+          { label: "네, 투자하고 있어요", next: "q2" }
+        ]
+      },
+      q2: {
+        question: "뉴스가 투자와 연관이 있다고 생각하시나요?",
+        options: [
+          { label: "아니요, 큰 관련 없다고 생각해요", next: "r_stat_significance" },
+          { label: "네, 관련 있다고 생각해요", next: "q3" }
+        ]
+      },
+      q3: {
+        question: "평소 경제·투자 뉴스를 확인하시나요?",
+        options: [
+          { label: "아니요, 거의 안 봐요", next: "r_easy_news" },
+          { label: "네, 확인하는 편이에요", next: "q4" }
+        ]
+      },
+      q4: {
+        question: "뉴스를 확인할 때 가장 불편한 점은 무엇인가요?",
+        options: [
+          { label: "실시간으로 못 봐서 투자 타이밍을 놓쳐요", next: "r_realtime_alert" },
+          { label: "뉴스 내용이 너무 길고 어려워요", next: "r_summary" },
+          { label: "호재인지 악재인지 판단이 안 서요", next: "r_sentiment" },
+          { label: "어느 기업·섹터와 연결되는지 모르겠어요", next: "r_theme_matching" }
+        ]
+      }
+    };
+
+    // Depth of each question, used to render the progress dots
+    const quizStepDepth = { q1: 1, q2: 2, q3: 3, q4: 4 };
+
+    // Result screens: message copy + which mini mockup to render
+    const quizResults = {
+      r_start_invest: {
+        icon: 'rocket',
+        tone: 'mint',
+        message: '뉴그널과 함께 손쉽게 투자를 시작해보아요!',
+        sub: '어려운 용어 없이, AI가 쉽게 풀어주는 뉴스로 첫 투자를 시작할 수 있어요.',
+        mockup: 'generic'
+      },
+      r_stat_significance: {
+        icon: 'trending-down',
+        tone: 'blue',
+        message: '뉴스와 금융시장 간의 유의성은 통계적으로 이미 입증되어 있어요 😢',
+        sub: '놓치고 계셨던 그 연결고리, 뉴그널이 매일 대신 확인해 드릴게요.',
+        mockup: 'generic'
+      },
+      r_easy_news: {
+        icon: 'newspaper',
+        tone: 'mint',
+        message: '뉴그널로 쉽고 편리하게 뉴스를 읽고, 알림도 받아보세요!',
+        sub: '매일 챙겨보지 않아도, 중요한 순간엔 뉴그널이 먼저 알려드려요.',
+        mockup: 'generic'
+      },
+      r_realtime_alert: {
+        icon: 'bell-ring',
+        tone: 'red',
+        message: '관심 기업·섹터를 설정하고 실시간 알림을 받아보세요!',
+        sub: '임계치를 넘는 순간, 다른 누구보다 먼저 알려드립니다.',
+        mockup: 'alert'
+      },
+      r_summary: {
+        icon: 'sparkles',
+        tone: 'mint',
+        message: '뉴그널 AI가 3줄로 핵심만 요약해드려요!',
+        sub: '긴 원문은 넣어두고, 투자에 필요한 사실만 빠르게 확인하세요.',
+        mockup: 'summary'
+      },
+      r_sentiment: {
+        icon: 'gauge',
+        tone: 'red',
+        message: '검증된 AI 감성 분석으로 뉴스의 논조를 파악해보세요!',
+        sub: '호재인지 악재인지, 숫자와 색으로 1초 만에 판단할 수 있어요.',
+        mockup: 'sentiment'
+      },
+      r_theme_matching: {
+        icon: 'layers',
+        tone: 'mint',
+        message: '뉴그널은 뉴스를 15개 테마로 자동 분류해드려요!',
+        sub: '이 뉴스가 어떤 산업, 어떤 종목과 연결되는지 바로 확인하세요.',
+        mockup: 'theme'
+      }
+    };
+
+    let quizHistory = [];
+    let quizCurrentStep = 'q1';
+
+    function initQuiz() {
+      quizHistory = [];
+      quizCurrentStep = 'q1';
+      renderQuiz();
+    }
+
+    function resetQuiz() {
+      initQuiz();
+    }
+
+    function goToQuizStep(nextStep) {
+      quizHistory.push(quizCurrentStep);
+      quizCurrentStep = nextStep;
+      renderQuiz();
+    }
+
+    function goToQuizPrev() {
+      if (quizHistory.length === 0) return;
+      quizCurrentStep = quizHistory.pop();
+      renderQuiz();
+    }
+
+    function renderQuizProgress(activeDepth) {
+      const progress = document.getElementById('quiz-progress');
+      if (!progress) return;
+      progress.innerHTML = '';
+      const totalSteps = 4;
+      for (let i = 1; i <= totalSteps; i++) {
+        const dot = document.createElement('div');
+        const filled = i <= activeDepth;
+        dot.className = `h-1.5 rounded-full transition-all duration-300 ${filled ? 'w-8 bg-neon-mint' : 'w-4 bg-white/10'}`;
+        progress.appendChild(dot);
+      }
+    }
+
+    function renderQuiz() {
+      const content = document.getElementById('quiz-content');
+      if (!content) return;
+
+      if (quizFlow[quizCurrentStep]) {
+        // ---- Question view ----
+        const step = quizFlow[quizCurrentStep];
+        const depth = quizStepDepth[quizCurrentStep];
+        renderQuizProgress(depth - 1);
+
+        const wrap = document.createElement('div');
+        wrap.className = "space-y-6 text-center quiz-fade-in";
+
+        const q = document.createElement('h3');
+        q.className = "text-xl sm:text-2xl font-bold text-white leading-snug";
+        q.innerText = step.question;
+        wrap.appendChild(q);
+
+        const optWrap = document.createElement('div');
+        optWrap.className = "flex flex-col gap-3 max-w-md mx-auto pt-2";
+        step.options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = "w-full py-4 px-5 rounded-2xl bg-onyx/60 border border-white/10 hover:border-neon-mint hover:bg-neon-mint/5 text-white text-sm font-semibold transition-all text-left flex items-center justify-between group";
+          btn.innerHTML = `<span>${opt.label}</span><i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-neon-mint group-hover:translate-x-1 transition-all flex-shrink-0"></i>`;
+          btn.onclick = () => goToQuizStep(opt.next);
+          optWrap.appendChild(btn);
+        });
+        wrap.appendChild(optWrap);
+
+        if (quizHistory.length > 0) {
+          const backBtn = document.createElement('button');
+          backBtn.className = "text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 mx-auto pt-2 transition-colors";
+          backBtn.innerHTML = `<i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> 이전 질문으로`;
+          backBtn.onclick = goToQuizPrev;
+          wrap.appendChild(backBtn);
+        }
+
+        content.innerHTML = '';
+        content.appendChild(wrap);
+      } else {
+        // ---- Result view ----
+        const result = quizResults[quizCurrentStep];
+        renderQuizProgress(4);
+
+        const toneMap = {
+          mint: { text: 'text-neon-mint', bg: 'bg-neon-mint/10', border: 'border-neon-mint/20' },
+          red: { text: 'text-sig-red', bg: 'bg-sig-red/10', border: 'border-sig-red/20' },
+          blue: { text: 'text-sig-blue', bg: 'bg-sig-blue/10', border: 'border-sig-blue/20' }
+        };
+        const tone = toneMap[result.tone];
+
+        const wrap = document.createElement('div');
+        wrap.className = "space-y-6 text-center quiz-fade-in";
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = `w-14 h-14 rounded-2xl ${tone.bg} border ${tone.border} ${tone.text} flex items-center justify-center mx-auto`;
+        iconWrap.innerHTML = `<i data-lucide="${result.icon}" class="w-7 h-7"></i>`;
+        wrap.appendChild(iconWrap);
+
+        const msg = document.createElement('h3');
+        msg.className = "text-lg sm:text-xl font-bold text-white leading-snug max-w-md mx-auto";
+        msg.innerText = result.message;
+        wrap.appendChild(msg);
+
+        const sub = document.createElement('p');
+        sub.className = "text-sm text-slate-400 max-w-sm mx-auto";
+        sub.innerText = result.sub;
+        wrap.appendChild(sub);
+
+        const mockupWrap = document.createElement('div');
+        mockupWrap.className = "max-w-sm mx-auto pt-2";
+        mockupWrap.innerHTML = renderQuizMockup(result.mockup);
+        wrap.appendChild(mockupWrap);
+
+        const ctaWrap = document.createElement('div');
+        ctaWrap.className = "flex flex-col sm:flex-row gap-3 justify-center pt-4";
+        ctaWrap.innerHTML = `
+          <a href="#cta" class="px-6 py-3 rounded-xl bg-neon-mint text-onyx font-bold text-sm hover:bg-emerald-400 transition-all flex items-center justify-center gap-2">
+            <span>뉴그널 시작하기</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+          <button onclick="resetQuiz()" class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-semibold text-sm border border-white/10 transition-all">
+            다시 진단하기
+          </button>
+        `;
+        wrap.appendChild(ctaWrap);
+
+        content.innerHTML = '';
+        content.appendChild(wrap);
+      }
+
+      lucide.createIcons();
+    }
+
+    // Small illustrative mockups shown alongside each result message
+    function renderQuizMockup(type) {
+      if (type === 'alert') {
+        return `
+          <div class="bg-onyx/70 border border-white/10 rounded-2xl p-4 flex items-center gap-3 text-left">
+            <div class="w-10 h-10 rounded-xl bg-sig-red/20 text-sig-red flex items-center justify-center flex-shrink-0 animate-pulse">
+              <i data-lucide="bell" class="w-5 h-5"></i>
+            </div>
+            <div class="space-y-0.5">
+              <div class="text-xs font-bold text-white">실시간 알림 [관심 기업 시그널 감지]</div>
+              <div class="text-[11px] text-slate-400">"HBM 대규모 추가 공급 계약 체결" 점수 +0.88 돌파</div>
+            </div>
+          </div>
+        `;
+      }
+      if (type === 'summary') {
+        return `
+          <div class="space-y-2 text-left">
+            <div class="bg-onyx/50 border border-white/5 rounded-2xl p-4">
+              <div class="text-[10px] text-slate-500 font-bold uppercase mb-1.5">뉴스 원문 (일부)</div>
+              <p class="text-[11px] text-slate-500 leading-relaxed line-clamp-2">글로벌 공급망 재편이 가속화되는 가운데 국내 기업들의 대응 전략과 실적 전망에 대한 분석이 이어지고 있으며...</p>
+            </div>
+            <div class="flex justify-center"><i data-lucide="arrow-down" class="w-4 h-4 text-neon-mint"></i></div>
+            <div class="bg-neon-mint/5 border border-neon-mint/10 rounded-2xl p-4">
+              <div class="flex items-center gap-1.5 text-[10px] text-neon-mint font-bold uppercase mb-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI 3줄 요약
+              </div>
+              <ul class="text-[11px] text-slate-300 space-y-1 list-none">
+                <li class="flex gap-1.5"><span class="text-neon-mint">•</span><span>공급망 재편 속 국내 기업 반사이익 기대</span></li>
+                <li class="flex gap-1.5"><span class="text-neon-mint">•</span><span>주요 실적 지표 개선 신호 포착</span></li>
+              </ul>
+            </div>
+          </div>
+        `;
+      }
+      if (type === 'sentiment') {
+        return `
+          <div class="bg-onyx/70 border border-white/10 rounded-2xl p-4 space-y-2.5 text-left">
+            <div class="flex items-center justify-between pb-2 border-b border-white/5">
+              <span class="text-[10px] text-slate-500 font-bold uppercase">AI 감성 분석 결과</span>
+              <span class="text-xs font-black text-sig-red">+0.82 (호재)</span>
+            </div>
+            <h4 class="text-xs font-bold text-white leading-snug">"OO기업, 글로벌 대형 고객사와 수주 계약 체결"</h4>
+          </div>
+        `;
+      }
+      if (type === 'theme') {
+        return `
+          <div class="bg-onyx/70 border border-white/10 rounded-2xl p-4 space-y-3 text-left">
+            <div class="flex flex-wrap gap-2">
+              <span class="px-2.5 py-1 rounded-full bg-neon-mint/10 text-neon-mint text-[10px] font-bold">반도체</span>
+              <span class="px-2.5 py-1 rounded-full bg-white/5 text-slate-400 text-[10px] font-bold">AI 테크</span>
+              <span class="px-2.5 py-1 rounded-full bg-white/5 text-slate-400 text-[10px] font-bold">클린에너지</span>
+            </div>
+            <p class="text-[11px] text-slate-400">뉴스가 발행되는 즉시 관련 섹터로 자동 태깅됩니다.</p>
+          </div>
+        `;
+      }
+      // generic fallback
+      return `
+        <div class="bg-onyx/70 border border-white/10 rounded-2xl p-4 flex items-center gap-3 text-left">
+          <div class="w-10 h-10 rounded-xl bg-neon-mint/10 text-neon-mint flex items-center justify-center flex-shrink-0">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div class="text-xs text-slate-300 font-medium">지금 바로 뉴그널 앱에서 확인해보세요.</div>
+        </div>
+      `;
     }
 
     // Simulator State variables
