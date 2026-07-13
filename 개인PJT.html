@@ -673,7 +673,7 @@
           </div>
         </div>
 
-        <!-- Showcase Card 2: Interactive Voting Community -->
+<!-- Showcase Card 2: Interactive Voting Community -->
         <div class="bg-dark-gray/50 border border-white/5 rounded-[40px] p-6 sm:p-8 flex flex-col justify-between space-y-8 hover:border-white/10 transition-all duration-300 reveal-el">
           <div class="space-y-4">
             <span class="px-3 py-1 rounded-full bg-sig-red/10 text-sig-red text-xs font-bold uppercase tracking-wider">
@@ -698,69 +698,85 @@
             </div>
 
             <!-- Sentiment Voting Component -->
-            <div class="bg-dark-gray/80 rounded-2xl p-4 border border-white/5 space-y-3.5">
-              <h4 class="text-xs font-extrabold text-slate-200">
-                Q. 이 뉴스가 반도체 섹터에 어떤 영향을 줄까요?
-              </h4>
-              
-              <!-- 5-stage option buttons -->
-              <div class="grid grid-cols-5 gap-1.5 text-center">
-                <div class="p-2 rounded-xl bg-sig-blue/20 border border-sig-blue/30 cursor-pointer">
-                  <div class="text-xs">🥶</div>
-                  <div class="text-[8px] text-slate-400 mt-0.5">강한악재</div>
-                </div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5 cursor-pointer">
-                  <div class="text-xs">📉</div>
-                  <div class="text-[8px] text-slate-400 mt-0.5">약한악재</div>
-                </div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5 cursor-pointer">
-                  <div class="text-xs">⚖️</div>
-                  <div class="text-[8px] text-slate-400 mt-0.5">보합중립</div>
-                </div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5 cursor-pointer">
-                  <div class="text-xs">📈</div>
-                  <div class="text-[8px] text-slate-400 mt-0.5">약한호재</div>
-                </div>
-                <div class="p-2 rounded-xl bg-sig-red/20 border border-sig-red/30 cursor-pointer">
-                  <div class="text-xs">🔥</div>
-                  <div class="text-[8px] text-slate-400 mt-0.5">강한호재</div>
+            <div class="bg-dark-gray/80 rounded-2xl p-4 border border-white/5 space-y-3.5 min-h-[260px] flex flex-col justify-center">
+
+              <!-- QUESTION VIEW: shown before voting -->
+              <div id="vote-question-view">
+                <h4 class="text-xs font-extrabold text-slate-200 mb-3.5">
+                  Q. 이 뉴스가 반도체 섹터에 어떤 영향을 줄까요?
+                </h4>
+
+                <!-- 5-stage option buttons -->
+                <div class="grid grid-cols-5 gap-1.5 text-center">
+                  <button onclick="castVote()" class="p-2 rounded-xl bg-sig-blue/20 border border-sig-blue/30 hover:border-sig-blue hover:bg-sig-blue/30 active:scale-95 cursor-pointer transition-all">
+                    <div class="text-xs">🥶</div>
+                    <div class="text-[8px] text-slate-400 mt-0.5">강한악재</div>
+                  </button>
+                  <button onclick="castVote()" class="p-2 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 active:scale-95 cursor-pointer transition-all">
+                    <div class="text-xs">📉</div>
+                    <div class="text-[8px] text-slate-400 mt-0.5">약한악재</div>
+                  </button>
+                  <button onclick="castVote()" class="p-2 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 active:scale-95 cursor-pointer transition-all">
+                    <div class="text-xs">⚖️</div>
+                    <div class="text-[8px] text-slate-400 mt-0.5">보합중립</div>
+                  </button>
+                  <button onclick="castVote()" class="p-2 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 active:scale-95 cursor-pointer transition-all">
+                    <div class="text-xs">📈</div>
+                    <div class="text-[8px] text-slate-400 mt-0.5">약한호재</div>
+                  </button>
+                  <button onclick="castVote()" class="p-2 rounded-xl bg-sig-red/20 border border-sig-red/30 hover:border-sig-red hover:bg-sig-red/30 active:scale-95 cursor-pointer transition-all">
+                    <div class="text-xs">🔥</div>
+                    <div class="text-[8px] text-slate-400 mt-0.5">강한호재</div>
+                  </button>
                 </div>
               </div>
 
-              <!-- Stats bars -->
-              <div class="space-y-2 pt-2 border-t border-white/5 text-[10px]">
-                <div>
-                  <div class="flex justify-between text-slate-400 mb-1">
-                    <span>강한 호재 (🔥)</span>
-                    <span class="text-sig-red font-bold">58%</span>
+              <!-- RESULT VIEW: shown after voting -->
+              <div id="vote-result-view" class="hidden space-y-3.5">
+                <div class="flex items-center gap-1.5 text-[10px] text-neon-mint font-bold">
+                  <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                  투표해주셔서 감사합니다! 실시간 통계를 확인해보세요.
+                </div>
+
+                <!-- Stats bars -->
+                <div class="space-y-2 pt-2 border-t border-white/5 text-[10px]">
+                  <div>
+                    <div class="flex justify-between text-slate-400 mb-1">
+                      <span>강한 호재 (🔥)</span>
+                      <span class="text-sig-red font-bold">58%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full bg-sig-red rounded-full" style="width: 58%"></div>
+                    </div>
                   </div>
-                  <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div class="h-full bg-sig-red rounded-full" style="width: 58%"></div>
+                  <div>
+                    <div class="flex justify-between text-slate-400 mb-1">
+                      <span>보합 / 약한 호재</span>
+                      <span class="text-neon-mint font-bold">32%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full bg-neon-mint rounded-full" style="width: 32%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-slate-400 mb-1">
+                      <span>악재 의견 (📉/🥶)</span>
+                      <span class="text-sig-blue font-bold">10%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full bg-sig-blue rounded-full" style="width: 10%"></div>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div class="flex justify-between text-slate-400 mb-1">
-                    <span>보합 / 약한 호재</span>
-                    <span class="text-neon-mint font-bold">32%</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div class="h-full bg-neon-mint rounded-full" style="width: 32%"></div>
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between text-slate-400 mb-1">
-                    <span>악재 의견 (📉/🥶)</span>
-                    <span class="text-sig-blue font-bold">10%</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div class="h-full bg-sig-blue rounded-full" style="width: 10%"></div>
-                  </div>
-                </div>
+
+                <button onclick="resetVote()" class="text-[10px] text-slate-500 hover:text-slate-300 flex items-center gap-1 pt-1 transition-colors">
+                  <i data-lucide="rotate-ccw" class="w-3 h-3"></i> 다시 투표하기
+                </button>
               </div>
             </div>
 
-            <!-- Opinion feed preview -->
-            <div class="space-y-2 text-[10px]">
+            <!-- Opinion feed preview (only after voting) -->
+            <div id="vote-opinion-feed" class="hidden space-y-2 text-[10px]">
               <div class="flex items-start gap-2 bg-dark-gray/40 p-2 rounded-xl border border-white/5">
                 <div class="w-5 h-5 rounded-full bg-neon-mint flex items-center justify-center text-onyx font-black text-[9px]">P</div>
                 <div class="space-y-0.5 flex-1">
@@ -999,6 +1015,40 @@
 
   <!-- JAVASCRIPT FOR SIMULATOR, INTERACTIVITY AND SCROLL REVEAL -->
   <script>
+    // ==========================================
+    // SENTIMENT VOTE (fixed result, screen-transition only — no storage)
+    // ==========================================
+    function castVote() {
+      const questionView = document.getElementById('vote-question-view');
+      const resultView = document.getElementById('vote-result-view');
+      const opinionFeed = document.getElementById('vote-opinion-feed');
+      if (!questionView || !resultView) return;
+
+      questionView.classList.add('hidden');
+      resultView.classList.remove('hidden');
+      resultView.classList.add('quiz-fade-in');
+      if (opinionFeed) {
+        opinionFeed.classList.remove('hidden');
+        opinionFeed.classList.add('quiz-fade-in');
+      }
+      lucide.createIcons();
+    }
+
+    function resetVote() {
+      const questionView = document.getElementById('vote-question-view');
+      const resultView = document.getElementById('vote-result-view');
+      const opinionFeed = document.getElementById('vote-opinion-feed');
+      if (!questionView || !resultView) return;
+
+      resultView.classList.add('hidden');
+      resultView.classList.remove('quiz-fade-in');
+      if (opinionFeed) {
+        opinionFeed.classList.add('hidden');
+        opinionFeed.classList.remove('quiz-fade-in');
+      }
+      questionView.classList.remove('hidden');
+      questionView.classList.add('quiz-fade-in');
+    }
     // Initialize Lucide Icons
     lucide.createIcons();
 
