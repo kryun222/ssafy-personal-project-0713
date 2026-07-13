@@ -974,8 +974,11 @@
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             entry.target.classList.add("revealed");
-            // Once the element is revealed, we don't need to observe it anymore
-            observer.unobserve(entry.target);
+          } else {
+            // Remove the class when it leaves the viewport so it can
+            // re-animate the next time it scrolls back into view
+            // (works for both scroll-down and scroll-up directions)
+            entry.target.classList.remove("revealed");
           }
         });
       };
